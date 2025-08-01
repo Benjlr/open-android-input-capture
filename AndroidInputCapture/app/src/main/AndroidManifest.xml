@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+        This is the AndroidManifest.xml for the Android *Library* module.
+        It should NOT define the launcher activity for the application.
+        That is the responsibility of the main app module (Unity's generated one).
+        We only declare necessary permissions and potentially library-specific components
+        if needed (though the helper approach doesn't require a dedicated activity).
+    -->
+    <application>
+        <!-- No activity declaration here for the helper class -->
+    </application>
+    <!-- Add any required permissions here if your library needs them -->
+    <!-- <uses-permission android:name="android.permission.INTERNET" /> -->
+</manifest>
