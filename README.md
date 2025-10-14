@@ -18,9 +18,18 @@ This project provides a way to implement pointer capture in Unity games running 
 
 ## Requirements
 
-- Unity 2021.3 or later
-- Android API 26 (Android 8.0 Oreo) or higher
-- Android Studio (for building the AAR library)
+- Unity 2022.3 LTS or later
+- Android API 34 (Android 14) for building the native library
+- Android Studio with JDK 17 (for building the AAR library)
+
+## Build Environment
+
+The Android library is configured with the latest stable toolchain as of 2024:
+
+- Android Gradle Plugin 8.5.0
+- Gradle 8.7
+- Android SDK 34 and Build Tools 34.0.0
+- Unity exported library dependencies targeting API level 34
 
 ## Project Structure
 
