@@ -8,8 +8,8 @@ dependencies {
 
 android {
     namespace 'com.unity3d.player'
-    compileSdkVersion 34
-    ndkVersion "29.0.13113456"
+    compileSdk 34
+    ndkVersion "26.1.10909125"
     buildToolsVersion '34.0.0'
 
     compileOptions {
@@ -18,8 +18,8 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 22
-        targetSdkVersion 34
+        minSdk 22
+        targetSdk 34
         ndk {
             abiFilters 'armeabi-v7a'
         }
@@ -28,17 +28,19 @@ android {
         consumerProguardFiles 'proguard-unity.txt'
     }
 
-    lintOptions {
-        abortOnError false
+    lint {
+        abortOnError = false
     }
 
-    aaptOptions {
-        noCompress = ['.unity3d', '.ress', '.resource', '.obb', '.bundle', '.unityexp']
+    androidResources {
+        noCompress += ['.unity3d', '.ress', '.resource', '.obb', '.bundle', '.unityexp']
         ignoreAssetsPattern = "!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~"
     }
 
-    packagingOptions {
-        doNotStrip '*/armeabi-v7a/*.so'
+    packaging {
+        jniLibs {
+            keepDebugSymbols += ['*/armeabi-v7a/*.so']
+        }
     }
 }
 
