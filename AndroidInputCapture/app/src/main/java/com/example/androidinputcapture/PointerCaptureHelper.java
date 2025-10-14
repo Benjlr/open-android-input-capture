@@ -50,8 +50,8 @@ public class PointerCaptureHelper implements Application.ActivityLifecycleCallba
     private PointerCaptureHelper() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             capturedPointerListener = (@NonNull View view, @NonNull MotionEvent event) -> {
-                 Log.d(TAG, "onCapturedPointer event received: action=" + event.getAction() +
-                 ", source=" + event.getSource() + ", buttonState=" + event.getButtonState());
+//                 Log.d(TAG, "onCapturedPointer event received: action=" + event.getAction() +
+//                 ", source=" + event.getSource() + ", buttonState=" + event.getButtonState());
 
                 // First event confirms capture is active after request
                 if (captureRequested && !hasCaptureConfirmed) {
@@ -72,7 +72,7 @@ public class PointerCaptureHelper implements Application.ActivityLifecycleCallba
                     if (action == MotionEvent.ACTION_MOVE) {
                         lastDx = event.getX();
                         lastDy = event.getY();
-                         Log.v(TAG, "Captured Relative Move: dx=" + lastDx + ", dy=" + lastDy);
+//                         Log.v(TAG, "Captured Relative Move: dx=" + lastDx + ", dy=" + lastDy);
                     }
                 }
 
@@ -80,8 +80,8 @@ public class PointerCaptureHelper implements Application.ActivityLifecycleCallba
                 lastButtonState = event.getButtonState();
                 if (action == MotionEvent.ACTION_BUTTON_PRESS || action == MotionEvent.ACTION_BUTTON_RELEASE) {
                     lastActionButton = event.getActionButton();
-                     Log.d(TAG, "Captured Button State Change: action=" + action +
-                            ", button=" + lastActionButton + ", state=" + lastButtonState);
+//                     Log.d(TAG, "Captured Button State Change: action=" + action +
+//                            ", button=" + lastActionButton + ", state=" + lastButtonState);
                 }
 
                 // Handle scroll wheel
@@ -89,12 +89,12 @@ public class PointerCaptureHelper implements Application.ActivityLifecycleCallba
                     // Check for vertical scroll
                     if (event.getAxisValue(MotionEvent.AXIS_VSCROLL) != 0) {
                         lastVerticalScrollDelta = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
-                         Log.d(TAG, "Captured Vertical Scroll: delta=" + lastVerticalScrollDelta);
+//                         Log.d(TAG, "Captured Vertical Scroll: delta=" + lastVerticalScrollDelta);
                     }
                     // Check for horizontal scroll
                     if (event.getAxisValue(MotionEvent.AXIS_HSCROLL) != 0) {
                         lastHorizontalScrollDelta = event.getAxisValue(MotionEvent.AXIS_HSCROLL);
-                        Log.d(TAG, "Captured Horizontal Scroll: delta=" + lastHorizontalScrollDelta);
+//                        Log.d(TAG, "Captured Horizontal Scroll: delta=" + lastHorizontalScrollDelta);
                     }
                 }
 
@@ -235,29 +235,56 @@ public class PointerCaptureHelper implements Application.ActivityLifecycleCallba
         });
     }
 
+    private static void dumpTree(String tag, View v, int depth) {
+        String pad = new String(new char[depth]).replace('\0', ' ');
+        Log.d(tag, pad + v.getClass().getName() + " id=" + v.getId());
+        if (v instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) v;
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                dumpTree(tag, vg.getChildAt(i), depth + 2);
+            }
+        }
+    }
+
+    private static View findUnityRenderView(View root) {
+        // Unity often uses SurfaceView or TextureView under a FrameLayout
+        if (root instanceof android.view.SurfaceView || root instanceof android.view.TextureView) {
+            return root;
+        }
+        // Catch anything clearly Unity-branded just in case
+        String name = root.getClass().getName();
+        if (name.contains("unity") || name.contains("Unity")) return root;
+
+        if (root instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) root;
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                View hit = findUnityRenderView(vg.getChildAt(i));
+                if (hit != null) return hit;
+            }
+        }
+        return null;
+    }
+
+    public static void inspect(Activity activity) {
+        View content = activity.findViewById(android.R.id.content); // ContentFrameLayout
+        ViewGroup inner = (ViewGroup) ((ViewGroup) content).getChildAt(0); // that FrameLayout
+        Log.d("MyTest", ">>> FULL TREE");
+        dumpTree("MyTest", inner, 0);
+
+        View unityRender = findUnityRenderView(inner);
+        Log.d("MyTest", "Unity render view: " + (unityRender == null ? "not found" : unityRender.getClass().getName()));
+    }
+
 
     @Nullable
     private View findUnityView(@Nullable Activity activity) {
         if (activity == null) return null;
         try {
             View content = activity.findViewById(android.R.id.content);
-            if (content instanceof ViewGroup && ((ViewGroup) content).getChildCount() > 0) {
-                View unityChild = ((ViewGroup) content).getChildAt(0);
-                // Basic checks if the found view seems like the Unity canvas/view
-                if (unityChild != null && unityChild.getClass().getName().contains("Unity")) {
-                    return unityChild;
-                } else {
-                    Log.w(TAG, "findUnityView: Child 0 does not look like Unity view: " + (unityChild != null ? unityChild.getClass().getName() : "null"));
-                }
-            }
-            // Fallback - might be the content view itself in some Unity versions/setups
-            if (content != null && content.getClass().getName().contains("Unity")) {
-                return content;
-            }
-            Log.w(TAG, "findUnityView: Could not reliably find a Unity view in activity: " + activity.getLocalClassName());
-            return null;
-        } catch (Exception e) {
-            Log.e(TAG, "Error finding Unity view", e);
+            ViewGroup inner = (ViewGroup) ((ViewGroup) content).getChildAt(0);
+            return findUnityRenderView(inner);
+        } catch (Throwable t) {
+            Log.e(TAG, "getCaptureTargetView error", t);
             return null;
         }
     }
