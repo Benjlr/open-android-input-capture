@@ -48,61 +48,46 @@ public class PointerCaptureHelper implements Application.ActivityLifecycleCallba
     private OnCapturedPointerListener capturedPointerListener = null;
 
     private PointerCaptureHelper() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             capturedPointerListener = (@NonNull View view, @NonNull MotionEvent event) -> {
 //                 Log.d(TAG, "onCapturedPointer event received: action=" + event.getAction() +
 //                 ", source=" + event.getSource() + ", buttonState=" + event.getButtonState());
 
-                // First event confirms capture is active after request
                 if (captureRequested && !hasCaptureConfirmed) {
                     Log.d(TAG, "onCapturedPointer: Capture confirmed by first event.");
                     hasCaptureConfirmed = true;
                 }
-                // Only process if capture is considered active by our helper
-                if (!hasCaptureConfirmed) {
+                if (!hasCaptureConfirmed)
                     return false;
-                }
 
                 int source = event.getSource();
                 int action = event.getAction();
 
-
                 // Handle relative mouse movement
-                if (source == InputDevice.SOURCE_MOUSE_RELATIVE || source == InputDevice.SOURCE_TOUCHPAD) {
-                    if (action == MotionEvent.ACTION_MOVE) {
+                    if (action == MotionEvent.ACTION_MOVE || action == MotionEvent.ACTION_HOVER_MOVE) {
                         lastDx = event.getX();
                         lastDy = event.getY();
-//                         Log.v(TAG, "Captured Relative Move: dx=" + lastDx + ", dy=" + lastDy);
+                         Log.d(TAG, "Captured Relative Move: dx=" + lastDx + ", dy=" + lastDy);
                     }
-                }
 
-                // Handle mouse button presses and releases
                 lastButtonState = event.getButtonState();
                 if (action == MotionEvent.ACTION_BUTTON_PRESS || action == MotionEvent.ACTION_BUTTON_RELEASE) {
                     lastActionButton = event.getActionButton();
-//                     Log.d(TAG, "Captured Button State Change: action=" + action +
-//                            ", button=" + lastActionButton + ", state=" + lastButtonState);
+                  Log.d(TAG, "Captured Button State Change: action=" + action +
+                           ", button=" + lastActionButton + ", state=" + lastButtonState);
                 }
 
-                // Handle scroll wheel
                 if (action == MotionEvent.ACTION_SCROLL) {
-                    // Check for vertical scroll
-                    if (event.getAxisValue(MotionEvent.AXIS_VSCROLL) != 0) {
+                    if (event.getAxisValue(MotionEvent.AXIS_VSCROLL) != 0)
                         lastVerticalScrollDelta = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
-//                         Log.d(TAG, "Captured Vertical Scroll: delta=" + lastVerticalScrollDelta);
-                    }
-                    // Check for horizontal scroll
-                    if (event.getAxisValue(MotionEvent.AXIS_HSCROLL) != 0) {
+                    if (event.getAxisValue(MotionEvent.AXIS_HSCROLL) != 0)
                         lastHorizontalScrollDelta = event.getAxisValue(MotionEvent.AXIS_HSCROLL);
-//                        Log.d(TAG, "Captured Horizontal Scroll: delta=" + lastHorizontalScrollDelta);
-                    }
                 }
 
                 // By default, return false so that the event may continue to be processed
                 // if not explicitly consumed by the helper.
-                return false;
+//                return false;
+            return true;
             };
-        }
     }
 
     public static void initialize(@NonNull Context context) {
